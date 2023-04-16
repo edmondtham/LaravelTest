@@ -25,6 +25,7 @@ class AuthorController extends Controller
     {
         $validatedData = $request->validate([
             'name' => 'required|max:255',
+            'email' => 'required|email',
         ]);
         $author = Author::create($validatedData);
         return response()->json($author, 201);
