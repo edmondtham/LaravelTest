@@ -2,6 +2,9 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthorController;
+use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Api\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,6 +17,23 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::post('/auth/register', [AuthController::class, 'createUser']);
+Route::post('/auth/login', [AuthController::class, 'loginUser']);
+
+Route::middleware('auth:sanctum')->group(function() {
+    Route::get('/authors', [AuthorController::class, 'index']);
+    Route::post('/authors', [AuthorController::class, 'store']);
+    Route::get('/authors/{id}', [AuthorController::class, 'show']);
+    Route::delete('/authors/{id}', [AuthorController::class, 'destroy']);
+    
+    Route::get('/posts', [PostController::class, 'index']);
+    Route::post('/posts', [PostController::class, 'store']);
+    Route::get('/posts/{id}', [PostController::class, 'show']);
+    Route::delete('/posts/{id}', [PostController::class, 'destroy']);
+});
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// Route::apiResource('authors', AuthorController::class)->middleware('auth:sanctum');
