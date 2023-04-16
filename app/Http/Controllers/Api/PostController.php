@@ -4,15 +4,21 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Post;
-use App\Enums\PostStatusEnum;
 use App\Mail\PublishEmail;
+use App\Services\PostService;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rules\Enum;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 
 class PostController extends Controller
 {
+    protected $postService;
+
+    public function __construct(PostService $postService)
+    {
+        $this->postService = $postService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -38,22 +44,12 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        $post = new Post($request->validate([
-            'title' => 'required|max:255',
-            'content' => 'required',
-            'author_id' => 'required|exists:authors,id'
-        ]));
+        $post = $this->postService->create($request);
 
-        if ($request->has('status')) {
-            $post->status = $request->input('status');
-            if ($request->input('status') == 'published'){
-                $post->published_at = Carbon::now();
-                $author = $post->author;
-                Mail::to($author->email)->send(new PublishEmail($post));
-            }
+        if ($request->has('status') && $request->input('status') == 'published') {
+            $post = $this->postService->publish($post->id);
         }
 
-        $post->save();
         return response()->json($post, 201);
     }
 
@@ -74,17 +70,8 @@ class PostController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $post = Post::find($id);
-        
-        if ($post) {
-            if ($request->has('status') && $request->input('status') == 'published' && !$post->published_at) {
-                $post->status = 'published';
-                $post->published_at = Carbon::now();
-                $author = $post->author;
-                Mail::to($author->email)->send(new PublishEmail($post));
-            }
-    
-            $post->save();
+        if ($request->has('status') && $request->input('status') == 'published') {
+            $post = $this->postService->publish($id);
             return response()->json($post);
         }
             

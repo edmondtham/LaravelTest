@@ -4,11 +4,19 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Author;
+use App\Services\AuthorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AuthorController extends Controller
 {
+    protected $authorService;
+
+    public function __construct(AuthorService $authorService)
+    {
+        $this->authorService = $authorService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -23,11 +31,7 @@ class AuthorController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'name' => 'required|max:255',
-            'email' => 'required|email',
-        ]);
-        $author = Author::create($validatedData);
+        $author = $this->authorService->create($request);
         return response()->json($author, 201);
     }
 
